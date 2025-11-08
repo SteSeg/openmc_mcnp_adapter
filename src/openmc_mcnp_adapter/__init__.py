@@ -3,3 +3,4 @@
 
 from .openmc_conversion import *  # noqa: F403
 from .parse import *  # noqa: F403
+from .attila_to_h5m_and_materials import *  # noqa: F403

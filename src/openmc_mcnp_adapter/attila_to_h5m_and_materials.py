@@ -125,6 +125,8 @@ def parse_block(block: str) -> Dict[str, Any]:
 def build_volume_material_maps(
     rtt_file: str,
     mcnp_file: str,
+    h5m_file: str = 'mesh.h5m',
+    export_h5m_file: bool = True,
     export_materials: bool = True,
     export_group_map: bool = True,
     validate: bool = True
@@ -135,6 +137,7 @@ def build_volume_material_maps(
     1. A volume map linking RTT volumes to MCNP pseudo-cells and materials
     2. A material map with OpenMC materials configured with names and densities
     3. A group map organizing volumes by material for OpenMC geometry
+    4. An H5M file with materials assigned to volumes (if requested)
     
     Parameters
     ----------
@@ -142,10 +145,14 @@ def build_volume_material_maps(
         Path to RTT mesh file (e.g., "model.rtt")
     mcnp_file : str
         Path to MCNP input file (e.g., "input.mcnp.i")
+    h5m_file : str, optional
+        Path for output H5M file with material assignments (default: "mesh.h5m")
+    export_h5m_file : bool, optional
+        If True, export H5M file with materials assigned to volumes (default: True)
     export_materials : bool, optional
         If True, export materials to materials.xml (default: True)
     export_group_map : bool, optional
-        If True, export group map to group_map.json (default: True)
+        If True, export group map to group_map.yaml (default: True)
     validate : bool, optional
         If True, perform validation checks on volume and material consistency (default: True)
     
@@ -167,6 +174,12 @@ def build_volume_material_maps(
         Dictionary mapping (material_label, material_id) to list of volume IDs
         Example: {('mat:Steel', 5): [1, 2, 3], ('mat:void', 0): [4, 5]}
     
+    Side Effects
+    ------------
+    - Writes materials.xml if export_materials=True
+    - Writes group_map.yaml if export_group_map=True
+    - Writes H5M file with material assignments if export_h5m_file=True
+    
     Raises
     ------
     ValueError
@@ -178,6 +191,15 @@ def build_volume_material_maps(
     --------
     >>> volume_map, material_map, group_map = build_volume_material_maps(
     ...     'model.rtt', 'input.mcnp.i'
+    ... )
+    
+    >>> # Export only specific outputs
+    >>> volume_map, material_map, group_map = build_volume_material_maps(
+    ...     'model.rtt', 'input.mcnp.i',
+    ...     h5m_file='custom_mesh.h5m',
+    ...     export_h5m_file=True,
+    ...     export_materials=False,
+    ...     export_group_map=False
     ... )
     """
     # Load RTT model and extract volumes
@@ -213,6 +235,12 @@ def build_volume_material_maps(
     # Export group map if requested
     if export_group_map:
         _export_group_map(group_map)
+
+    if export_h5m_file:
+        model = pydagmc.Model(rtt_file)
+        # assign materials to volumes
+        model.add_groups(group_map)
+        model.mb.write_file(h5m_file)
     
     return volume_map, material_map, group_map
 
