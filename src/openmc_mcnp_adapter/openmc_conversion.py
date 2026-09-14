@@ -30,11 +30,11 @@ from .parse import parse, _COMPLEMENT_RE, _CELL_FILL_RE
 _MACROBODY_FACETS = {
     BOX: {
         1: ('ax1_max', False),
-        2: ('ax1_min', False),
+        2: ('ax1_min', True),
         3: ('ax2_max', False),
-        4: ('ax2_min', False),
+        4: ('ax2_min', True),
         5: ('ax3_max', False),
-        6: ('ax3_min', False),
+        6: ('ax3_min', True),
     },
     RCC: {
         1: ('cyl', False),
